@@ -4,10 +4,11 @@ pre-commit:
       glob: "*.{ts,tsx,js,jsx,json,jsonc,css,html,md,yml,yaml}"
       run: pnpm exec oxfmt --check {staged_files}
     lint:
-      glob: "*.{ts,tsx,js,jsx}"
-      run: pnpm exec oxlint --deny-warnings {staged_files}
+      run: pnpm lint
 
 pre-push:
   commands:
+    lint:
+      run: pnpm lint
     typecheck:
       run: pnpm typecheck

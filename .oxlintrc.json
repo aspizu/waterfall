@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["eslint-plugin-better-tailwindcss"],
+  "ignorePatterns": ["dist/**"],
+  "settings": {
+    "better-tailwindcss": {
+      "entryPoint": "src/styles.css",
+      "rootFontSize": 16
+    }
+  },
+  "rules": {
+    "better-tailwindcss/enforce-canonical-classes": "error",
+    "better-tailwindcss/no-conflicting-classes": "error",
+    "better-tailwindcss/no-unknown-classes": "error",
+    "better-tailwindcss/no-duplicate-classes": "error",
+    "better-tailwindcss/no-deprecated-classes": "error"
+  }
+}

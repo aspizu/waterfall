@@ -18,4 +18,4 @@ Idle lifespan and unclassified gaps do not contribute to the gradient. Known exp
 
 `pnpm test` runs the parser and interval calculation tests.
 
-`pnpm lint` checks code with Oxlint. `pnpm format` formats project files with Oxfmt, and `pnpm format:check` checks formatting. Lefthook checks staged files before commits and runs the TypeScript check before pushes.
+`pnpm lint` checks code and Tailwind classes with Oxlint. Noncanonical classes such as `w-[260px]` are errors; `pnpm lint:fix` rewrites them to forms such as `w-65`. The Tailwind rules also flag unknown, conflicting, duplicate, and deprecated classes. `pnpm format` formats project files with Oxfmt, and `pnpm format:check` checks formatting. Lefthook checks staged formatting and runs lint before commits. Pushes run lint and the TypeScript check.
