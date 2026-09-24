@@ -16,14 +16,15 @@ export type Chat = {
 type Day = {start: number; end: number; chats: Chat[]}
 
 const MINUTE = 60_000
-const BEFORE_START = "rgb(7 8 12)"
+const FADE = 30 * MINUTE
+const BEFORE_START = "rgb(12 8 10)"
 const AFTER_ARCHIVE = "rgb(0 0 0)"
 const PALETTE = [
-  [15, 20, 34],
-  [87, 53, 138],
-  [52, 105, 201],
-  [27, 166, 190],
-  [163, 220, 87],
+  [22, 14, 20],
+  [122, 28, 98],
+  [200, 54, 73],
+  [243, 129, 61],
+  [252, 224, 144],
 ] as const
 
 function palette(activity: number) {
@@ -36,7 +37,7 @@ function palette(activity: number) {
   return `rgb(${rgb.join(" ")})`
 }
 
-const archiveTime = (chat: Chat) => chat.archivedAt ?? (chat.archived ? chat.lastAt : null)
+const archiveTime = (chat: Chat) => chat.messages.at(-1) ?? chat.lastAt ?? null
 
 function dayGradient(chat: Chat, start: number, end: number) {
   const bins = Math.max(2, Math.ceil((end - start) / MINUTE))
@@ -66,13 +67,8 @@ function dayGradient(chat: Chat, start: number, end: number) {
     )
   const archivedAt = archiveTime(chat)
   if (archivedAt !== null) {
-    const lastMessage = Math.min(
-      archivedAt,
-      chat.messages.filter((time) => time <= archivedAt).at(-1) ?? chat.lastAt ?? chat.createdAt,
-    )
-    const fadePosition = (time: number) => (((time - start) / (end - start)) * 100).toFixed(3)
     layers.push(
-      `linear-gradient(to right, transparent ${fadePosition(lastMessage)}%, ${AFTER_ARCHIVE} ${fadePosition(archivedAt)}%)`,
+      `linear-gradient(to right, transparent ${percent(archivedAt)}%, ${AFTER_ARCHIVE} ${percent(archivedAt + FADE)}%)`,
     )
   }
   layers.push(`linear-gradient(to right, ${stops.join(",")})`)
@@ -104,7 +100,7 @@ export function makeDays(chats: Chat[]) {
       chat.lastAt ?? chat.createdAt,
       ...chat.messages,
       ...chat.activity.map(([, e]) => e),
-      archiveTime(chat) ?? chat.createdAt,
+      (archiveTime(chat) ?? 0) + FADE,
     )
   const starts = currentChats.map(chatStart).filter((time) => time >= start)
   if (starts.length) start = Math.min(...starts)

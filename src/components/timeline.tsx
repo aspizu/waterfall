@@ -1,8 +1,9 @@
 import type {TimelineDay} from "../lib/timeline.ts"
-import {ChatRow} from "./chat-row.tsx"
+import {ChatRow, fakeNames} from "./chat-row.tsx"
 import {TimelineRuler} from "./timeline-ruler.tsx"
 
 export function Timeline({day, incognitoMode}: {day: TimelineDay; incognitoMode: boolean}) {
+  const names = fakeNames(day.chats.map((chat) => chat.id))
   return (
     <section
       className="relative flex h-svh flex-col"
@@ -17,6 +18,7 @@ export function Timeline({day, incognitoMode}: {day: TimelineDay; incognitoMode:
             index={index}
             ticks={day.ticks}
             incognitoMode={incognitoMode}
+            fakeName={names.get(chat.id)}
           />
         ))}
       </div>
