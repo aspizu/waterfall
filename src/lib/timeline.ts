@@ -84,8 +84,8 @@ export function makeDays(chats: Chat[]) {
   const date = new Date(now)
   date.setHours(9, 0, 0, 0)
   if (now < +date) date.setDate(date.getDate() - 1)
-  const start = +date
-  const end = start + 24 * 60 * MINUTE
+  let start = +date
+  let end = start + 24 * 60 * MINUTE
   const currentChats = chats.filter((chat) => {
     if (chat.kind === "subagent") return false
     const archivedAt = archiveTime(chat)
@@ -97,6 +97,18 @@ export function makeDays(chats: Chat[]) {
     )
   })
   if (!currentChats.length) return []
+  const chatStart = (chat: Chat) =>
+    Math.min(chat.createdAt, ...chat.messages, ...chat.activity.map(([s]) => s))
+  const chatEnd = (chat: Chat) =>
+    Math.max(
+      chat.lastAt ?? chat.createdAt,
+      ...chat.messages,
+      ...chat.activity.map(([, e]) => e),
+      archiveTime(chat) ?? chat.createdAt,
+    )
+  const starts = currentChats.map(chatStart).filter((time) => time >= start)
+  if (starts.length) start = Math.min(...starts)
+  end = Math.min(end, Math.max(...currentChats.map(chatEnd)))
   const formatter = new Intl.DateTimeFormat([], {
     hour: "2-digit",
     minute: "2-digit",
