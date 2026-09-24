@@ -1,16 +1,20 @@
 import {createReadStream} from "node:fs"
 import {execFile} from "node:child_process"
 import {promisify} from "node:util"
-import {readdir, mkdir, readFile, writeFile, rename} from "node:fs/promises"
+import {readdir, mkdir, readFile, writeFile, rename, stat} from "node:fs/promises"
 import {createInterface} from "node:readline"
 import {homedir} from "node:os"
 import {join, dirname, basename, resolve} from "node:path"
 import {fileURLToPath} from "node:url"
 import {Result, ResultAsync, err, ok} from "neverthrow"
 import {createTranscriptParser} from "./parse-transcript.ts"
+import {parseOpenCodeDatabase} from "./parse-opencode.ts"
 import {mergeIntervals, subtractIntervals} from "../src/lib/metrics.ts"
 
 const root = process.env.CODEX_DATA_DIR || join(homedir(), ".codex")
+const openCodeRoot =
+  process.env.OPENCODE_DATA_DIR ||
+  join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "opencode")
 const project = fileURLToPath(new URL("../", import.meta.url))
 const destination = join(project, "public/data/activity.json")
 const toError = (cause: unknown) => (cause instanceof Error ? cause : new Error(String(cause)))
@@ -241,10 +245,19 @@ async function exportData(): Promise<Result<void, Error>> {
     chats.set(chat.id, chat)
   }
 
+  const openCodePath = join(openCodeRoot, "opencode.db")
+  const openCodeFile = await ResultAsync.fromPromise(stat(openCodePath), toError)
+  if (openCodeFile.isOk()) {
+    const openCode = Result.fromThrowable(() => parseOpenCodeDatabase(openCodePath), toError)()
+    if (openCode.isErr()) return err(openCode.error)
+    for (const chat of openCode.value) chats.set(chat.id, chat)
+  } else if ((openCodeFile.error as NodeJS.ErrnoException).code !== "ENOENT")
+    return err(openCodeFile.error)
+
   const output = {
     version: 1,
     generatedAt: new Date().toISOString(),
-    sourceFiles: files.length,
+    sourceFiles: files.length + (openCodeFile.isOk() ? 1 : 0),
     chats: [...chats.values()].sort((a, b) => a.createdAt! - b.createdAt!),
   }
   const saved = await ResultAsync.fromPromise(
@@ -257,10 +270,12 @@ async function exportData(): Promise<Result<void, Error>> {
   )
   if (saved.isErr()) return err(saved.error)
   console.log(
-    `Exported ${output.chats.length} chats from ${files.length} transcript files. Snapshot: public/data/activity.json`,
+    `Exported ${output.chats.length} chats from ${files.length} Codex transcript files and ${openCodeFile.isOk() ? 1 : 0} OpenCode databases. Snapshot: public/data/activity.json`,
   )
-  if (!files.length)
-    console.log("No transcripts found. Set CODEX_DATA_DIR to use another Codex directory.")
+  if (!files.length && openCodeFile.isErr())
+    console.log(
+      "No sessions found. Set CODEX_DATA_DIR or OPENCODE_DATA_DIR to use another directory.",
+    )
   return ok(undefined)
 }
 

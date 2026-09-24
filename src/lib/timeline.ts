@@ -80,58 +80,36 @@ function dayGradient(chat: Chat, start: number, end: number) {
 }
 
 export function makeDays(chats: Chat[]) {
-  const days = new Map<number, Day>()
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  for (const chat of chats) {
-    if (chat.kind === "subagent") continue
-    const cursor = new Date(chat.createdAt)
-    cursor.setHours(0, 0, 0, 0)
+  const now = Date.now()
+  const date = new Date(now)
+  date.setHours(9, 0, 0, 0)
+  if (now < +date) date.setDate(date.getDate() - 1)
+  const start = +date
+  const end = start + 24 * 60 * MINUTE
+  const currentChats = chats.filter((chat) => {
+    if (chat.kind === "subagent") return false
     const archivedAt = archiveTime(chat)
-    const last = Math.max(chat.lastAt ?? chat.createdAt, archivedAt ?? chat.createdAt)
-    while (+cursor <= last) {
-      const start = +cursor
-      cursor.setDate(cursor.getDate() + 1)
-      const end = +cursor
-      const hasActivity = chat.activity.some(([s, e]) => s < end && e > start)
-      const hasMessage = chat.messages.some((t) => t >= start && t < end)
-      const hasArchive = archivedAt !== null && archivedAt >= start && archivedAt < end
-      if (
-        hasActivity ||
-        hasMessage ||
-        hasArchive ||
-        (chat.createdAt >= start && chat.createdAt < end)
-      ) {
-        if (!days.has(start)) days.set(start, {start, end, chats: []})
-        days.get(start)!.chats.push(chat)
-      }
-    }
-  }
-  return [...days.values()]
-    .filter((day) => day.start === +today)
-    .map((day) => {
-      const from = Math.max(day.start, Math.min(...day.chats.map((chat) => chat.createdAt)))
-      const last = Math.min(
-        day.end,
-        Math.max(
-          ...day.chats.map((chat) =>
-            Math.max(chat.lastAt ?? chat.createdAt, archiveTime(chat) ?? chat.createdAt),
-          ),
-        ),
-      )
-      const to = Math.min(day.end, Math.max(from + 1, last, Date.now()))
-      const formatter = new Intl.DateTimeFormat([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        ...(to - from < 5 * MINUTE ? {second: "2-digit"} : {}),
-        hour12: true,
-      })
-      return {
-        ...day,
-        ticks: Array.from({length: 5}, (_, i) => formatter.format(from + ((to - from) * i) / 4)),
-        chats: day.chats.map((chat) => ({...chat, gradient: dayGradient(chat, from, to)})),
-      }
-    })
+    return (
+      chat.activity.some(([s, e]) => s < end && e > start) ||
+      chat.messages.some((time) => time >= start && time < end) ||
+      (archivedAt !== null && archivedAt >= start && archivedAt < end) ||
+      (chat.createdAt >= start && chat.createdAt < end)
+    )
+  })
+  if (!currentChats.length) return []
+  const formatter = new Intl.DateTimeFormat([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+  const day: Day = {start, end, chats: currentChats}
+  return [
+    {
+      ...day,
+      ticks: Array.from({length: 5}, (_, i) => formatter.format(start + ((end - start) * i) / 4)),
+      chats: day.chats.map((chat) => ({...chat, gradient: dayGradient(chat, start, end)})),
+    },
+  ]
 }
 
 export type TimelineDay = ReturnType<typeof makeDays>[number]

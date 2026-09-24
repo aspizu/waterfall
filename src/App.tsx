@@ -17,7 +17,7 @@ export default function App() {
       </p>
     )
   if (!data) return <LoadingSpinner />
-  if (!days.length) return <p className="m-5 text-xs">No recorded chats today.</p>
+  if (!days.length) return <p className="m-5 text-xs">No recorded chats in this period.</p>
 
   return (
     <main
