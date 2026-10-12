@@ -10,7 +10,12 @@ export function Timeline({day, incognitoMode}: {day: TimelineDay; incognitoMode:
       aria-label={new Date(day.start).toLocaleDateString()}
     >
       <TimelineRuler ticks={day.ticks} />
-      <div className="grid min-h-0 flex-1 auto-rows-fr">
+      <div
+        className="grid min-h-0 flex-1"
+        style={{
+          gridTemplateRows: day.chats.map((chat) => `minmax(1.75rem, ${chat.weight}fr)`).join(" "),
+        }}
+      >
         {day.chats.map((chat, index) => (
           <ChatRow
             key={chat.id}

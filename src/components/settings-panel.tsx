@@ -1,15 +1,23 @@
 import {useState} from "react"
 import {ChevronDown, Settings} from "lucide-react"
 import {cn} from "../lib/utils.ts"
+import {COLOR_SCHEMES, type ColorScheme} from "../lib/timeline.ts"
 import {Button} from "./ui/button.tsx"
 import {Switch} from "./ui/switch.tsx"
 
 type SettingsPanelProps = {
   incognitoMode: boolean
   onIncognitoChange: (checked: boolean) => void
+  colorScheme: ColorScheme
+  onColorSchemeChange: (scheme: ColorScheme) => void
 }
 
-export function SettingsPanel({incognitoMode, onIncognitoChange}: SettingsPanelProps) {
+export function SettingsPanel({
+  incognitoMode,
+  onIncognitoChange,
+  colorScheme,
+  onColorSchemeChange,
+}: SettingsPanelProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -35,17 +43,36 @@ export function SettingsPanel({incognitoMode, onIncognitoChange}: SettingsPanelP
         </Button>
       </div>
       {open && (
-        <div className="flex items-center justify-between gap-4 px-1.5 pt-2.5 pb-1 text-xs">
-          <label className="cursor-pointer" htmlFor="incognito-mode">
-            Incognito Mode
-          </label>
-          <Switch
-            id="incognito-mode"
-            checked={incognitoMode}
-            onCheckedChange={onIncognitoChange}
-            className="data-[state=checked]:bg-[#43cbd4]! data-[state=unchecked]:bg-white/22!"
-          />
-        </div>
+        <>
+          <div className="flex items-center justify-between gap-4 px-1.5 pt-2.5 pb-1 text-xs">
+            <label className="cursor-pointer" htmlFor="incognito-mode">
+              Incognito Mode
+            </label>
+            <Switch
+              id="incognito-mode"
+              checked={incognitoMode}
+              onCheckedChange={onIncognitoChange}
+              className="data-[state=checked]:bg-[#43cbd4]! data-[state=unchecked]:bg-white/22!"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 px-1.5 pt-1 pb-1.5 text-xs">
+            <label className="cursor-pointer" htmlFor="color-scheme">
+              Color Scheme
+            </label>
+            <select
+              id="color-scheme"
+              value={colorScheme}
+              onChange={(event) => onColorSchemeChange(event.target.value as ColorScheme)}
+              className="rounded-md border border-white/14 bg-[#0d111b] px-1.5 py-1 text-xs text-[#e6edf3] outline-none"
+            >
+              {Object.entries(COLOR_SCHEMES).map(([value, scheme]) => (
+                <option key={value} value={value}>
+                  {scheme.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
     </aside>
   )

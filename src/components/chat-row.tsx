@@ -86,7 +86,10 @@ export function ChatRow({chat, index, ticks, incognitoMode, fakeName}: ChatRowPr
 
   return (
     <div className="grid min-h-0 grid-cols-1 overflow-hidden border-t border-[#151720] first:border-t-0">
-      <div className="pointer-events-none relative z-1 col-start-1 row-start-1 m-0.5 min-w-0 self-end justify-self-stretch truncate text-xs/normal  font-medium text-[#e6edf3] [-webkit-text-stroke:1.5px_#08090d] [paint-order:stroke_fill] max-[600px]:text-[11px]">
+      <div
+        className="pointer-events-none relative z-1 col-start-1 row-start-1 m-0.5 min-w-0 self-end justify-self-stretch truncate text-xs/normal font-medium text-[#e6edf3] [-webkit-text-stroke:1.5px_#08090d] [paint-order:stroke_fill] max-[600px]:text-[11px]"
+        style={{marginLeft: `calc(${chat.startPercent}% + 0.125rem)`}}
+      >
         {project ? `(${project}) ` : ""}
         {title}
       </div>

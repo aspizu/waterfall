@@ -3,12 +3,13 @@ import {LoadingSpinner} from "./components/loading-spinner.tsx"
 import {SettingsPanel} from "./components/settings-panel.tsx"
 import {Timeline} from "./components/timeline.tsx"
 import {useActivity} from "./hooks/use-activity.ts"
-import {makeDays} from "./lib/timeline.ts"
+import {makeDays, type ColorScheme} from "./lib/timeline.ts"
 
 export default function App() {
   const {data, error} = useActivity()
   const [incognitoMode, setIncognitoMode] = useState(false)
-  const days = useMemo(() => makeDays(data?.chats || []), [data])
+  const [colorScheme, setColorScheme] = useState<ColorScheme>("magma")
+  const days = useMemo(() => makeDays(data?.chats || [], colorScheme), [data, colorScheme])
 
   if (error && !data)
     return (
@@ -27,7 +28,12 @@ export default function App() {
       {days.map((day) => (
         <Timeline key={day.start} day={day} incognitoMode={incognitoMode} />
       ))}
-      <SettingsPanel incognitoMode={incognitoMode} onIncognitoChange={setIncognitoMode} />
+      <SettingsPanel
+        incognitoMode={incognitoMode}
+        onIncognitoChange={setIncognitoMode}
+        colorScheme={colorScheme}
+        onColorSchemeChange={setColorScheme}
+      />
     </main>
   )
 }
